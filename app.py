@@ -48,9 +48,12 @@ with st.sidebar:
     st.header("Configuration")
     base_url_input = st.text_input("N8N Base URL", help="Enter your n8n Base URL (e.g., https://n8n.example.com).")
     api_key_input = st.text_input("N8N API Key", type="password", help="Enter your n8n API key here.")
+    batch_size_input = st.number_input("Batch Size", min_value=1, max_value=250, value=10, help="Number of workflows to fetch per API call.")
     
     st.header("Controls")
-    if st.button("Refresh Data", type="primary"):
+    fetch_btn = st.button("Fetch Workflows", type="primary")
+    
+    if st.button("Refresh Data"):
         st.session_state.workflow_data = None # Clear session state to force re-fetch
         st.rerun()
     
@@ -165,8 +168,8 @@ def render_dashboard(openrouter_list, other_list, all_list):
 
 # Main Logic
 if api_key_input:
-    # Check if we need to fetch data (first run or refresh)
-    if st.session_state.workflow_data is None:
+    # Check if we need to fetch data (fetch button clicked)
+    if fetch_btn:
         
         # Containers for live updates
         status_container = st.empty()
@@ -184,7 +187,7 @@ if api_key_input:
                 api_url = f"{base_url_clean}/api/v1/workflows"
 
             # Generator loop
-            for batch in fetch_workflows_generator(api_url=api_url, api_key=api_key_input):
+            for batch in fetch_workflows_generator(api_url=api_url, api_key=api_key_input, batch_size=batch_size_input):
                 
                 if isinstance(batch, dict) and "error" in batch:
                     status.error(batch["error"])
@@ -217,10 +220,10 @@ if api_key_input:
             "all": all_list
         }
         
-    else:
-        # Render from session state
+    elif st.session_state.workflow_data:
+        # Render from session state if available
         data = st.session_state.workflow_data
         render_dashboard(data["openrouter"], data["other"], data["all"])
 
 else:
-    st.warning("Please enter your N8N API Key in the sidebar to view the dashboard.")
+    st.warning("Please enter your N8N details and click on Fetch Workflows button in the sidebar to view the dashboard.")

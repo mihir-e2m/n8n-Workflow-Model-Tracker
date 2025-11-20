@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def fetch_workflows_generator(api_url=None, api_key=None):
+def fetch_workflows_generator(api_url=None, api_key=None, batch_size=20):
     """
     Generator that yields batches of workflows from the n8n API using pagination.
     """
@@ -31,9 +31,6 @@ def fetch_workflows_generator(api_url=None, api_key=None):
     cursor = None
     
     try:
-        # Get batch size from env, default to 20
-        batch_size = int(os.getenv("N8N_BATCH_SIZE", 20))
-        
         while True:
             params = {'limit': batch_size}
             if cursor:
